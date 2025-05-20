@@ -114,4 +114,28 @@ impl TamEmulator {
         let code = self.code_store[addr as usize];
         Ok(TamInstruction::from(code))
     }
+
+    /// Executes the given instruction.
+    pub fn execute(&mut self, instr: TamInstruction) -> TamResult<bool> {
+        match instr.op {
+            0 => todo!("exec_load"),
+            1 => todo!("exec_loada"),
+            2 => todo!("exec_loadi"),
+            3 => todo!("exec_loadl"),
+            4 => todo!("exec_store"),
+            5 => todo!("exec_storei"),
+            6 => todo!("exec_call"),
+            7 => todo!("exec_calli"),
+            8 => todo!("exec_return"),
+            10 => todo!("exec_push"),
+            11 => todo!("exec_pop"),
+            12 => todo!("exec_jump"),
+            13 => todo!("exec_jumpi"),
+            14 => todo!("exec_jumpif"),
+            15 => return Ok(false),
+            _ => return Err(TamError::UnknownOpcode(instr.op)),
+        }
+
+        Ok(true)
+    }
 }
