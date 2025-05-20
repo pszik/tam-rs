@@ -1,4 +1,4 @@
-mod errors;
+pub mod errors;
 
 use byteorder::{BE, ReadBytesExt};
 use errors::*;
