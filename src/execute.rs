@@ -31,7 +31,7 @@ mod tests {
 
     #[fixture]
     fn emulator() -> TamEmulator {
-        TamEmulator::new()
+        TamEmulator::new(false)
     }
 
     #[rstest]

@@ -22,6 +22,7 @@ pub struct TamEmulator {
     pub code_store: [u32; MEMORY_SIZE],
     pub data_store: [i16; MEMORY_SIZE],
     pub registers: [u16; 16],
+    trace: bool,
 }
 
 /// A single TAM instruction.
@@ -54,11 +55,12 @@ impl From<u32> for TamInstruction {
 
 impl TamEmulator {
     /// Constructs a new TAM emulator with zeroed memory and default registers.
-    pub fn new() -> TamEmulator {
+    pub fn new(trace: bool) -> TamEmulator {
         let mut emu = TamEmulator {
             code_store: [0; MEMORY_SIZE],
             data_store: [0; MEMORY_SIZE],
             registers: [0; 16],
+            trace,
         };
 
         emu.registers[HB] = MEMORY_MAX as u16;
@@ -129,6 +131,10 @@ impl TamEmulator {
 
     /// Executes the given instruction.
     pub fn execute(&mut self, instr: TamInstruction) -> TamResult<bool> {
+        if self.trace {
+            println!("{:?}", instr);
+        }
+
         match instr.op {
             0 => self.exec_load(instr)?,
             1 => todo!("exec_loada"),
@@ -159,7 +165,7 @@ mod tests {
 
     #[fixture]
     fn emulator() -> TamEmulator {
-        TamEmulator::new()
+        TamEmulator::new(false)
     }
 
     #[rstest]

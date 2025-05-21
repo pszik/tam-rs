@@ -18,7 +18,7 @@ fn main() -> TamResult<()> {
     // load program from file
     let cli = Cli::parse();
     let code = read_code_from_file(&cli.prog_file).map_err(|_| TamError::IOError)?;
-    let mut emu = TamEmulator::new();
+    let mut emu = TamEmulator::new(cli.trace);
     emu.set_program(&code)?;
 
     // CPU cycle
