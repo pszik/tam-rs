@@ -77,7 +77,7 @@ impl TamEmulator {
     /// # Example
     ///
     /// ```
-    /// let mut emu = tam_rs::TamEmulator::new();
+    /// let mut emu = tam_rs::TamEmulator::new(false);
     /// let code = vec![0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08];
     /// let res = emu.set_program(&code);
     /// assert!(res.is_ok());
