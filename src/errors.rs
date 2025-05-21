@@ -2,6 +2,9 @@
 pub enum TamError {
     OutOfMemory,
     CodeAccessViolation,
+    DataAccessViolation,
+    StackOverflow,
+    StackUnderflow,
     UnknownOpcode(u8),
     IOError,
 }

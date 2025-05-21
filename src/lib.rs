@@ -1,4 +1,5 @@
 pub mod errors;
+mod execute;
 
 use byteorder::{BE, ReadBytesExt};
 use errors::*;
@@ -115,10 +116,21 @@ impl TamEmulator {
         Ok(TamInstruction::from(code))
     }
 
+    fn push(&mut self, value: i16) -> TamResult<()> {
+        let addr = self.registers[ST];
+        if addr >= self.registers[HT] {
+            return Err(TamError::StackOverflow);
+        }
+
+        self.data_store[addr as usize] = value;
+        self.registers[ST] += 1;
+        Ok(())
+    }
+
     /// Executes the given instruction.
     pub fn execute(&mut self, instr: TamInstruction) -> TamResult<bool> {
         match instr.op {
-            0 => todo!("exec_load"),
+            0 => self.exec_load(instr)?,
             1 => todo!("exec_loada"),
             2 => todo!("exec_loadi"),
             3 => todo!("exec_loadl"),
