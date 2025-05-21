@@ -24,7 +24,7 @@ pub struct TamEmulator {
 }
 
 /// A single TAM instruction.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub struct TamInstruction {
     /// Opcode
     op: u8,
@@ -137,5 +137,58 @@ impl TamEmulator {
         }
 
         Ok(true)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rstest::*;
+
+    #[fixture]
+    fn emulator() -> TamEmulator {
+        TamEmulator::new()
+    }
+
+    #[rstest]
+    #[case(0x00000000, TamInstruction { op: 0, r: 0, n: 0, d: 0 })]
+    #[case(0x12345678, TamInstruction { op: 1, r: 2, n: 52, d: 22136 })]
+    #[case(0xa8765432, TamInstruction { op: 10, r: 8, n: 118, d:21554 })]
+    #[case(0xffffffff, TamInstruction { op: 15, r: 15, n: 255, d: -1 })]
+    fn test_taminstruction_from_u32(#[case] code: u32, #[case] instr: TamInstruction) {
+        assert_eq!(instr, TamInstruction::from(code));
+    }
+
+    #[rstest]
+    fn test_fetch_decode_cp_in_range_ok(mut emulator: TamEmulator) {
+        emulator.code_store[0] = 0x12;
+        emulator.code_store[1] = 0x12345678;
+        emulator.code_store[2] = 0x56;
+        emulator.code_store[3] = 0x78;
+        emulator.registers[CT] = 4;
+        emulator.registers[CP] = 1;
+
+        match emulator.fetch_decode() {
+            Err(e) => panic!("unexpected error: {:?}", e),
+            Ok(instr) => assert_eq!(
+                TamInstruction {
+                    op: 1,
+                    r: 2,
+                    n: 52,
+                    d: 22136
+                },
+                instr
+            ),
+        }
+    }
+
+    #[rstest]
+    fn test_fetch_decode_cp_out_of_range_err(mut emulator: TamEmulator) {
+        emulator.registers[CP] = 3;
+
+        match emulator.fetch_decode() {
+            Ok(_) => panic!("unexpected success"),
+            Err(e) => assert_eq!(TamError::CodeAccessViolation, e),
+        }
     }
 }
