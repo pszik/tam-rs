@@ -219,4 +219,34 @@ mod tests {
             Err(e) => assert_eq!(TamError::CodeAccessViolation, e),
         }
     }
+
+    #[rstest]
+    fn test_push_stack_has_space_ok(mut emulator: TamEmulator) {
+        let res = emulator.push(23);
+        assert!(res.is_ok());
+        assert_eq!(23, emulator.data_store[0]);
+        assert_eq!(1, emulator.registers[ST]);
+    }
+
+    #[rstest]
+    fn test_push_stack_full_stack_overflow(mut emulator: TamEmulator) {
+        emulator.registers[ST] = 2;
+        emulator.registers[HT] = 2;
+        let res = emulator.push(-81);
+        assert_eq!(TamError::StackOverflow, res.unwrap_err());
+    }
+
+    #[rstest]
+    fn test_pop_stack_has_data_ok(mut emulator: TamEmulator) {
+        emulator.data_store[0] = 77;
+        emulator.registers[ST] = 1;
+        let res = emulator.pop();
+        assert_eq!(77, res.unwrap());
+    }
+
+    #[rstest]
+    fn test_pop_stack_empty_stack_underflow(mut emulator: TamEmulator) {
+        let res = emulator.pop();
+        assert_eq!(TamError::StackUnderflow, res.unwrap_err());
+    }
 }
