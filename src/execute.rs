@@ -27,6 +27,21 @@ impl TamEmulator {
         let addr = self.calc_address(instr);
         self.push(addr as i16)
     }
+
+    pub(super) fn exec_loadi(&mut self, instr: TamInstruction) -> TamResult<()> {
+        let addr = self.pop()? as u16;
+
+        for i in 0..instr.n {
+            let addr = addr + i as u16;
+            if addr >= self.registers[ST] && addr <= self.registers[HT] {
+                return Err(TamError::DataAccessViolation);
+            }
+
+            self.push(self.data_store[addr as usize])?;
+        }
+
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -124,5 +139,66 @@ mod tests {
             d: 0,
         });
         assert_eq!(TamError::StackOverflow, res.unwrap_err());
+    }
+
+    #[rstest]
+    fn test_exec_loadi_all_in_range_ok(mut emulator: TamEmulator) {
+        emulator.data_store[0] = 5;
+        emulator.data_store[1] = 10;
+        emulator.data_store[2] = 15;
+        emulator.data_store[3] = 1;
+        emulator.registers[ST] = 4;
+
+        let instr = TamInstruction {
+            op: 2,
+            r: SB as u8,
+            n: 2,
+            d: 1,
+        };
+        let res = emulator.exec_loadi(instr);
+
+        assert!(res.is_ok());
+        assert_eq!(10, emulator.data_store[3], "Wrong first value loaded");
+        assert_eq!(15, emulator.data_store[4], "Wrong second value loaded");
+        assert_eq!(5, emulator.registers[ST], "ST incorrect");
+    }
+
+    #[rstest]
+    fn test_exec_loadi_empty_stack_stack_underflow(mut emulator: TamEmulator) {
+        let res = emulator.exec_loadi(TamInstruction {
+            op: 0,
+            r: 0,
+            n: 0,
+            d: 0,
+        });
+        assert_eq!(TamError::StackUnderflow, res.unwrap_err());
+    }
+
+    #[rstest]
+    fn test_exec_loadi_full_stack_stack_overflow(mut emulator: TamEmulator) {
+        emulator.registers[ST] = 2;
+        emulator.registers[HT] = 2;
+
+        let res = emulator.exec_loadi(TamInstruction {
+            op: 0,
+            r: 0,
+            n: 2,
+            d: 0,
+        });
+        assert_eq!(TamError::StackOverflow, res.unwrap_err());
+    }
+
+    #[rstest]
+    fn test_exec_loadi_addr_out_of_range_data_access_violation(mut emulator: TamEmulator) {
+        emulator.data_store[0] = 25;
+        emulator.registers[ST] = 1;
+
+        let res = emulator.exec_loadi(TamInstruction {
+            op: 0,
+            r: 0,
+            n: 1,
+            d: 0,
+        });
+        assert_eq!(TamError::DataAccessViolation, res.unwrap_err());
     }
 }

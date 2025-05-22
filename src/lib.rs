@@ -129,6 +129,16 @@ impl TamEmulator {
         Ok(())
     }
 
+    fn pop(&mut self) -> TamResult<i16> {
+        if self.registers[ST] == 0 {
+            return Err(TamError::StackUnderflow);
+        }
+
+        self.registers[ST] -= 1;
+        let val = self.data_store[self.registers[ST] as usize];
+        Ok(val)
+    }
+
     /// Executes the given instruction.
     pub fn execute(&mut self, instr: TamInstruction) -> TamResult<bool> {
         if self.trace {
@@ -138,7 +148,7 @@ impl TamEmulator {
         match instr.op {
             0 => self.exec_load(instr)?,
             1 => self.exec_loada(instr)?,
-            2 => todo!("exec_loadi"),
+            2 => self.exec_loadi(instr)?,
             3 => todo!("exec_loadl"),
             4 => todo!("exec_store"),
             5 => todo!("exec_storei"),
