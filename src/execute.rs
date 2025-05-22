@@ -42,6 +42,10 @@ impl TamEmulator {
 
         Ok(())
     }
+
+    pub(super) fn exec_loadl(&mut self, instr: TamInstruction) -> TamResult<()> {
+        self.push(instr.d)
+    }
 }
 
 #[cfg(test)]
@@ -200,5 +204,36 @@ mod tests {
             d: 0,
         });
         assert_eq!(TamError::DataAccessViolation, res.unwrap_err());
+    }
+
+    #[rstest]
+    fn test_exec_loadl_all_in_range_ok(mut emulator: TamEmulator) {
+        let instr = TamInstruction {
+            op: 3,
+            r: 0,
+            n: 0,
+            d: 84,
+        };
+        let res = emulator.exec_loadl(instr);
+
+        assert!(res.is_ok());
+        assert_eq!(84, emulator.data_store[0]);
+        assert_eq!(1, emulator.registers[ST]);
+    }
+
+    #[rstest]
+    fn test_exec_loadl_stack_full_stack_overflow(mut emulator: TamEmulator) {
+        emulator.registers[ST] = 2;
+        emulator.registers[HT] = 2;
+
+        let instr = TamInstruction {
+            op: 3,
+            r: 0,
+            n: 0,
+            d: 84,
+        };
+        let res = emulator.exec_loadl(instr);
+
+        assert_eq!(TamError::StackOverflow, res.unwrap_err());
     }
 }
