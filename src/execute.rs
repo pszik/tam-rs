@@ -1,5 +1,5 @@
 use crate::{
-    HT, ST, TamEmulator, TamInstruction,
+    HT, SB, ST, TamEmulator, TamInstruction,
     errors::{TamError, TamResult},
 };
 
@@ -21,6 +21,11 @@ impl TamEmulator {
         }
 
         Ok(())
+    }
+
+    pub(super) fn exec_loada(&mut self, instr: TamInstruction) -> TamResult<()> {
+        let addr = self.calc_address(instr);
+        self.push(addr as i16)
     }
 }
 
@@ -76,5 +81,48 @@ mod tests {
 
         let res = emulator.exec_load(instr);
         assert_eq!(TamError::DataAccessViolation, res.unwrap_err());
+    }
+
+    #[rstest]
+    fn test_exec_load_stack_full_stack_overflow(mut emulator: TamEmulator) {
+        emulator.registers[ST] = 2;
+        emulator.registers[HT] = 1;
+
+        let res = emulator.exec_load(TamInstruction {
+            op: 0,
+            r: 0,
+            n: 1,
+            d: 0,
+        });
+        assert_eq!(TamError::StackOverflow, res.unwrap_err());
+    }
+
+    #[rstest]
+    fn text_exec_loada_ok(mut emulator: TamEmulator) {
+        emulator.registers[SB] = 5;
+        let instr = TamInstruction {
+            op: 1,
+            r: SB as u8,
+            n: 0,
+            d: 3,
+        };
+
+        let res = emulator.exec_loada(instr);
+        assert!(res.is_ok());
+        assert_eq!(8, emulator.data_store[0]);
+    }
+
+    #[rstest]
+    fn test_exec_loada_stack_full_stack_overflow(mut emulator: TamEmulator) {
+        emulator.registers[ST] = 3;
+        emulator.registers[HT] = 3;
+
+        let res = emulator.exec_loada(TamInstruction {
+            op: 1,
+            r: 0,
+            n: 1,
+            d: 0,
+        });
+        assert_eq!(TamError::StackOverflow, res.unwrap_err());
     }
 }

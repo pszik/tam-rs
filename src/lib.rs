@@ -137,7 +137,7 @@ impl TamEmulator {
 
         match instr.op {
             0 => self.exec_load(instr)?,
-            1 => todo!("exec_loada"),
+            1 => self.exec_loada(instr)?,
             2 => todo!("exec_loadi"),
             3 => todo!("exec_loadl"),
             4 => todo!("exec_store"),
