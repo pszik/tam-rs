@@ -3,7 +3,10 @@ mod execute;
 
 use byteorder::{BE, ReadBytesExt};
 use errors::*;
-use std::io::Cursor;
+use std::{
+    fmt::{self, Display},
+    io::Cursor,
+};
 
 pub const MEMORY_SIZE: usize = 65536;
 pub const MEMORY_MAX: usize = MEMORY_SIZE - 1;
@@ -49,6 +52,29 @@ impl From<u32> for TamInstruction {
             r: r as u8,
             n: n as u8,
             d: d as i16,
+        }
+    }
+}
+
+impl Display for TamInstruction {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self.op {
+            0 => write!(f, "LOAD({}) {}[{}]", self.n, self.d, self.r),
+            1 => write!(f, "LOADA {}[{}]", self.d, self.r),
+            2 => write!(f, "LOADI({})", self.n),
+            3 => write!(f, "LOADL {}", self.d),
+            4 => write!(f, "STORE({}) {}[{}]", self.n, self.d, self.r),
+            5 => write!(f, "STOREI({})", self.n),
+            6 => write!(f, "CALL({}) {}[{}]", self.n, self.d, self.r),
+            7 => write!(f, "CALLI"),
+            8 => write!(f, "RETURN({}) {}", self.n, self.d),
+            10 => write!(f, "PUSH {}", self.d),
+            11 => write!(f, "POP({}), {}", self.n, self.d),
+            12 => write!(f, "JUMP {}[{}]", self.d, self.r),
+            13 => write!(f, "JUMPI"),
+            14 => write!(f, "JUMPIF({}) {}[{}]", self.n, self.r, self.d),
+            15 => write!(f, "HALT"),
+            x => write!(f, "unrecognised opcode {}", x),
         }
     }
 }
@@ -142,7 +168,7 @@ impl TamEmulator {
     /// Executes the given instruction.
     pub fn execute(&mut self, instr: TamInstruction) -> TamResult<bool> {
         if self.trace {
-            println!("{:?}", instr);
+            println!("{:#06x}: {}", self.registers[CP] - 1, instr);
         }
 
         match instr.op {
