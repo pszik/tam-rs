@@ -5,17 +5,17 @@ use byteorder::{BE, ReadBytesExt};
 use errors::*;
 use std::io::Cursor;
 
-const MEMORY_SIZE: usize = 65536;
-const MEMORY_MAX: usize = MEMORY_SIZE - 1;
+pub const MEMORY_SIZE: usize = 65536;
+pub const MEMORY_MAX: usize = MEMORY_SIZE - 1;
 
-const CT: usize = 1;
-const PB: usize = 2;
-const PT: usize = 3;
-const SB: usize = 4;
-const ST: usize = 5;
-const HB: usize = 6;
-const HT: usize = 7;
-const CP: usize = 15;
+pub const CT: usize = 1;
+pub const PB: usize = 2;
+pub const PT: usize = 3;
+pub const SB: usize = 4;
+pub const ST: usize = 5;
+pub const HB: usize = 6;
+pub const HT: usize = 7;
+pub const CP: usize = 15;
 
 #[derive(Debug)]
 pub struct TamEmulator {
