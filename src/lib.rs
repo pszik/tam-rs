@@ -150,7 +150,7 @@ impl TamEmulator {
             1 => self.exec_loada(instr)?,
             2 => self.exec_loadi(instr)?,
             3 => self.exec_loadl(instr)?,
-            4 => todo!("exec_store"),
+            4 => self.exec_store(instr)?,
             5 => todo!("exec_storei"),
             6 => todo!("exec_call"),
             7 => todo!("exec_calli"),

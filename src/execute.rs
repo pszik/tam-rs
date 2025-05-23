@@ -46,6 +46,23 @@ impl TamEmulator {
     pub(super) fn exec_loadl(&mut self, instr: TamInstruction) -> TamResult<()> {
         self.push(instr.d)
     }
+
+    pub(super) fn exec_store(&mut self, instr: TamInstruction) -> TamResult<()> {
+        let mut data = Vec::new();
+        for _ in 0..instr.n {
+            data.push(self.pop()?);
+        }
+
+        let addr = self.calc_address(instr);
+        for i in 0..instr.n {
+            let addr = addr + i as u16;
+            if addr >= self.registers[ST] && addr <= self.registers[HT] {
+                return Err(TamError::DataAccessViolation);
+            }
+            self.data_store[addr as usize] = data.pop().expect("unexpectedly stored too much data");
+        }
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -235,5 +252,58 @@ mod tests {
         let res = emulator.exec_loadl(instr);
 
         assert_eq!(TamError::StackOverflow, res.unwrap_err());
+    }
+
+    #[rstest]
+    fn test_exec_store_all_in_range_ok(mut emulator: TamEmulator) {
+        emulator.data_store[0] = 0;
+        emulator.data_store[1] = 1;
+        emulator.data_store[2] = 2;
+        emulator.data_store[3] = 3;
+        emulator.data_store[4] = 4;
+        emulator.data_store[5] = 5;
+        emulator.registers[ST] = 6;
+
+        let instr = TamInstruction {
+            op: 4,
+            r: SB as u8,
+            n: 2,
+            d: 1,
+        };
+        let res = emulator.exec_store(instr);
+
+        assert!(res.is_ok());
+        assert_eq!(4, emulator.data_store[1]);
+        assert_eq!(5, emulator.data_store[2]);
+        assert_eq!(4, emulator.registers[ST]);
+    }
+
+    #[rstest]
+    fn test_exec_store_not_enough_data_stack_underflow(mut emulator: TamEmulator) {
+        let instr = TamInstruction {
+            op: 4,
+            r: SB as u8,
+            n: 2,
+            d: 1,
+        };
+        let res = emulator.exec_store(instr);
+        assert_eq!(TamError::StackUnderflow, res.unwrap_err());
+    }
+
+    #[rstest]
+    fn test_exec_store_addr_out_of_range_data_access_violation(mut emulator: TamEmulator) {
+        emulator.data_store[0] = 1;
+        emulator.registers[ST] = 1;
+        let instr = TamInstruction {
+            op: 4,
+            r: SB as u8,
+            n: 1,
+            d: 10,
+        };
+        let res = emulator.exec_store(instr);
+        assert_eq!(
+            TamError::DataAccessViolation,
+            res.expect_err("result should not have been Ok")
+        );
     }
 }
