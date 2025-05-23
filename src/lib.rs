@@ -177,7 +177,7 @@ impl TamEmulator {
             2 => self.exec_loadi(instr)?,
             3 => self.exec_loadl(instr)?,
             4 => self.exec_store(instr)?,
-            5 => todo!("exec_storei"),
+            5 => self.exec_storei(instr)?,
             6 => todo!("exec_call"),
             7 => todo!("exec_calli"),
             8 => todo!("exec_return"),
