@@ -21,14 +21,6 @@ pub const HT: usize = 7;
 pub const LB: usize = 8;
 pub const CP: usize = 15;
 
-#[derive(Debug)]
-pub struct TamEmulator {
-    pub code_store: [u32; MEMORY_SIZE],
-    pub data_store: [i16; MEMORY_SIZE],
-    pub registers: [u16; 16],
-    trace: bool,
-}
-
 /// A single TAM instruction.
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct TamInstruction {
@@ -78,6 +70,14 @@ impl Display for TamInstruction {
             x => write!(f, "unrecognised opcode {}", x),
         }
     }
+}
+
+#[derive(Debug)]
+pub struct TamEmulator {
+    pub code_store: [u32; MEMORY_SIZE],
+    pub data_store: [i16; MEMORY_SIZE],
+    pub registers: [u16; 16],
+    trace: bool,
 }
 
 impl TamEmulator {
