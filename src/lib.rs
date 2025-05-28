@@ -18,6 +18,7 @@ pub const SB: usize = 4;
 pub const ST: usize = 5;
 pub const HB: usize = 6;
 pub const HT: usize = 7;
+pub const LB: usize = 8;
 pub const CP: usize = 15;
 
 #[derive(Debug)]
@@ -178,7 +179,7 @@ impl TamEmulator {
             3 => self.exec_loadl(instr)?,
             4 => self.exec_store(instr)?,
             5 => self.exec_storei(instr)?,
-            6 => todo!("exec_call"),
+            6 => self.exec_call(instr)?,
             7 => todo!("exec_calli"),
             8 => todo!("exec_return"),
             10 => todo!("exec_push"),

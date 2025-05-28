@@ -1,5 +1,5 @@
 use crate::{
-    HT, SB, ST, TamEmulator, TamInstruction,
+    CP, CT, HT, LB, ST, TamEmulator, TamInstruction,
     errors::{TamError, TamResult},
 };
 
@@ -81,11 +81,31 @@ impl TamEmulator {
         }
         Ok(())
     }
+
+    pub(super) fn exec_call(&mut self, instr: TamInstruction) -> TamResult<()> {
+        let static_link = self.registers[instr.n as usize];
+        let dynamic_link = self.registers[LB];
+        let return_address = self.registers[CP];
+
+        self.push(static_link as i16)?;
+        self.push(dynamic_link as i16)?;
+        self.push(return_address as i16)?;
+
+        self.registers[LB] = self.registers[ST] - 3;
+        let addr = self.calc_address(instr);
+        if addr >= self.registers[CT] {
+            return Err(TamError::CodeAccessViolation);
+        }
+
+        self.registers[CP] = addr;
+        Ok(())
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::SB;
     use rstest::*;
 
     #[fixture]
@@ -377,5 +397,62 @@ mod tests {
             TamError::DataAccessViolation,
             res.expect_err("result should not have been Ok")
         );
+    }
+
+    #[rstest]
+    fn test_exec_call_all_in_range_ok(mut emulator: TamEmulator) {
+        emulator.registers[CT] = 20;
+        emulator.registers[LB] = 3;
+        emulator.registers[CP] = 7;
+
+        let instr = TamInstruction {
+            op: 6,
+            r: 0,
+            n: 4,
+            d: 2,
+        };
+        let res = emulator.exec_call(instr);
+
+        assert!(res.is_ok());
+        assert_eq!(0, emulator.data_store[0], "wrong static link");
+        assert_eq!(3, emulator.data_store[1], "wrong dynamic link");
+        assert_eq!(7, emulator.data_store[2], "wrong return address");
+        assert_eq!(2, emulator.registers[CP], "jumped to wrong location");
+    }
+
+    #[rstest]
+    fn test_exec_call_stack_full_stack_overflow(mut emulator: TamEmulator) {
+        emulator.registers[CT] = 20;
+        emulator.registers[LB] = 3;
+        emulator.registers[CP] = 7;
+        emulator.registers[ST] = 4;
+        emulator.registers[HT] = 4;
+
+        let instr = TamInstruction {
+            op: 6,
+            r: 0,
+            n: 4,
+            d: 2,
+        };
+        let res = emulator.exec_call(instr);
+
+        assert_eq!(TamError::StackOverflow, res.unwrap_err());
+    }
+
+    #[rstest]
+    fn test_exec_call_invalid_target_code_access_violation(mut emulator: TamEmulator) {
+        emulator.registers[CT] = 20;
+        emulator.registers[LB] = 3;
+        emulator.registers[CP] = 7;
+
+        let instr = TamInstruction {
+            op: 6,
+            r: 0,
+            n: 4,
+            d: 22,
+        };
+        let res = emulator.exec_call(instr);
+
+        assert_eq!(TamError::CodeAccessViolation, res.unwrap_err());
     }
 }
