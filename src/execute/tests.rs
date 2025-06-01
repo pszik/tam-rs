@@ -7,11 +7,23 @@ fn emulator() -> TamEmulator {
     TamEmulator::new(false)
 }
 
+#[inline]
+fn set_test_program(emu: &mut TamEmulator, prog: &[u32]) {
+    emu.code_store.fill(0);
+    emu.code_store[..prog.len()].copy_from_slice(prog);
+    emu.registers[CT] = prog.len() as u16;
+}
+
+#[inline]
+fn set_test_data(emu: &mut TamEmulator, data: &[i16]) {
+    emu.data_store.fill(0);
+    emu.data_store[..data.len()].copy_from_slice(data);
+    emu.registers[ST] = data.len() as u16;
+}
+
 #[rstest]
 fn test_exec_load_all_in_range_ok(mut emulator: TamEmulator) {
-    emulator.data_store[0] = 0x12;
-    emulator.data_store[1] = 0x98;
-    emulator.registers[ST] = 2;
+    set_test_data(&mut emulator, &[0x12, 0x98]);
 
     let instr = TamInstruction {
         op: 0,
@@ -36,9 +48,7 @@ fn test_exec_load_all_in_range_ok(mut emulator: TamEmulator) {
 
 #[rstest]
 fn test_exec_load_addr_out_of_range_data_access_violation(mut emulator: TamEmulator) {
-    emulator.data_store[0] = 0x12;
-    emulator.data_store[1] = 0x98;
-    emulator.registers[ST] = 2;
+    set_test_program(&mut emulator, &[0x12, 0x98]);
 
     let instr = TamInstruction {
         op: 0,
@@ -96,10 +106,7 @@ fn test_exec_loada_stack_full_stack_overflow(mut emulator: TamEmulator) {
 
 #[rstest]
 fn test_exec_loadi_all_in_range_ok(mut emulator: TamEmulator) {
-    emulator.data_store[0] = 5;
-    emulator.data_store[1] = 10;
-    emulator.data_store[2] = 15;
-    emulator.data_store[3] = 1;
+    set_test_data(&mut emulator, &[5, 10, 15, 1]);
     emulator.registers[ST] = 4;
 
     let instr = TamInstruction {
@@ -188,13 +195,7 @@ fn test_exec_loadl_stack_full_stack_overflow(mut emulator: TamEmulator) {
 
 #[rstest]
 fn test_exec_store_all_in_range_ok(mut emulator: TamEmulator) {
-    emulator.data_store[0] = 0;
-    emulator.data_store[1] = 1;
-    emulator.data_store[2] = 2;
-    emulator.data_store[3] = 3;
-    emulator.data_store[4] = 4;
-    emulator.data_store[5] = 5;
-    emulator.registers[ST] = 6;
+    set_test_data(&mut emulator, &[0, 1, 2, 3, 4, 5]);
 
     let instr = TamInstruction {
         op: 4,
@@ -241,14 +242,7 @@ fn test_exec_store_addr_out_of_range_data_access_violation(mut emulator: TamEmul
 
 #[rstest]
 fn test_exec_storei_all_in_range_ok(mut emulator: TamEmulator) {
-    emulator.data_store[0] = 0;
-    emulator.data_store[1] = 1;
-    emulator.data_store[2] = 2;
-    emulator.data_store[3] = 3;
-    emulator.data_store[4] = 4;
-    emulator.data_store[5] = 5;
-    emulator.data_store[6] = 1;
-    emulator.registers[ST] = 7;
+    set_test_data(&mut emulator, &[0, 1, 2, 3, 4, 5, 1]);
 
     let instr = TamInstruction {
         op: 4,
@@ -349,3 +343,6 @@ fn test_exec_call_invalid_target_code_access_violation(mut emulator: TamEmulator
 
     assert_eq!(TamError::CodeAccessViolation, res.unwrap_err());
 }
+
+#[rstest]
+fn test_exec_return_all_valid_ok(mut emulator: TamEmulator) {}

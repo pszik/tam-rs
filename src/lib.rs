@@ -111,7 +111,7 @@ impl TamEmulator {
     /// assert_eq!(0x01020304, emu.code_store[0]);
     /// assert_eq!(0x05060708, emu.code_store[1]);
     /// ```
-    pub fn set_program(&mut self, code: &Vec<u8>) -> TamResult<()> {
+    pub fn set_program(&mut self, code: &[u8]) -> TamResult<()> {
         if code.len() / 4 > MEMORY_SIZE {
             return Err(TamError::OutOfMemory);
         }
@@ -181,7 +181,7 @@ impl TamEmulator {
             5 => self.exec_storei(instr)?,
             6 => self.exec_call(instr)?,
             7 => todo!("exec_calli"),
-            8 => todo!("exec_return"),
+            8 => self.exec_return(instr)?,
             10 => todo!("exec_push"),
             11 => todo!("exec_pop"),
             12 => todo!("exec_jump"),

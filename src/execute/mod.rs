@@ -100,6 +100,44 @@ impl TamEmulator {
         self.registers[CP] = addr;
         Ok(())
     }
+
+    pub(super) fn exec_return(&mut self, instr: TamInstruction) -> TamResult<()> {
+        // pop result and save link data
+        let mut return_val = Vec::new();
+        for _ in 0..instr.n {
+            return_val.push(self.pop()?);
+        }
+
+        let dynamic_link_addr = self.registers[LB] + 1;
+        let dynamic_link = self.data_store[dynamic_link_addr as usize];
+        let return_addr_addr = self.registers[LB] + 2;
+        let return_addr = self.data_store[return_addr_addr as usize];
+
+        // pop stack frame
+        while self.registers[ST] != self.registers[LB] {
+            self.pop()?;
+        }
+
+        // pop args
+        for _ in 0..instr.d {
+            self.pop()?;
+        }
+
+        // push result
+        for _ in 0..instr.n {
+            self.push(
+                return_val
+                    .pop()
+                    .expect("return value had wrong number of bytes"),
+            )?;
+        }
+
+        // update registers
+        self.registers[LB] = dynamic_link as u16;
+        self.registers[CP] = return_addr as u16;
+
+        Ok(())
+    }
 }
 
 #[cfg(test)]
