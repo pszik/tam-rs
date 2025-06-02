@@ -1,3 +1,4 @@
+mod primitive;
 use crate::{
     CP, CT, HT, LB, ST, TamEmulator, TamInstruction,
     errors::{TamError, TamResult},
@@ -80,6 +81,21 @@ impl TamEmulator {
             self.data_store[addr as usize] = data.pop().expect("unexpectedly stored too much data");
         }
         Ok(())
+    }
+
+    pub(super) fn exec_call_primitive(&mut self, offset: i16) -> TamResult<()> {
+        assert!(
+            offset > 0 && offset < 29,
+            "exec_call_primitive received invalid offset {offset}"
+        );
+
+        match offset {
+            1 => Ok(()), // id
+            2 => self.exec_prim_and(),
+            3 => self.exec_prim_or(),
+            4 => self.exec_prim_not(),
+            _ => Ok(()),
+        }
     }
 
     pub(super) fn exec_call(&mut self, instr: TamInstruction) -> TamResult<()> {

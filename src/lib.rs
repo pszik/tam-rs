@@ -179,7 +179,13 @@ impl TamEmulator {
             3 => self.exec_loadl(instr)?,
             4 => self.exec_store(instr)?,
             5 => self.exec_storei(instr)?,
-            6 => self.exec_call(instr)?,
+            6 => {
+                if instr.r == (PB as u8) && instr.d > 0 && instr.d < 29 {
+                    self.exec_call_primitive(instr.d)?
+                } else {
+                    self.exec_call(instr)?
+                }
+            }
             7 => todo!("exec_calli"),
             8 => self.exec_return(instr)?,
             10 => todo!("exec_push"),

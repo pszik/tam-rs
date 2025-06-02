@@ -345,4 +345,22 @@ fn test_exec_call_invalid_target_code_access_violation(mut emulator: TamEmulator
 }
 
 #[rstest]
-fn test_exec_return_all_valid_ok(mut emulator: TamEmulator) {}
+fn test_exec_return_all_valid_ok(mut emulator: TamEmulator) {
+    set_test_data(&mut emulator, &[1, 2, 0, 0, 7, 2, 4]);
+    emulator.registers[LB] = 2;
+    emulator.registers[CT] = 15;
+
+    let instr = TamInstruction {
+        op: 8,
+        r: 0,
+        n: 1,
+        d: 2,
+    };
+    let res = emulator.exec_return(instr);
+
+    assert!(res.is_ok());
+    assert_eq!(0, emulator.registers[LB], "wrong LB after return");
+    assert_eq!(7, emulator.registers[CP], "wrong CP after return");
+    assert_eq!(1, emulator.registers[ST], "wrong ST after return");
+    assert_eq!(4, emulator.data_store[0], "incorrect stack after return");
+}
